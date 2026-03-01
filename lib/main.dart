@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
-import 'screens/home_screen.dart';
+import 'screens/app_shell.dart';
 
 void main() {
   runApp(const SafescapeApp());
@@ -15,7 +15,7 @@ class SafescapeApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: "Safescape",
       theme: AppTheme.theme,
-      home: const HomeScreen(),
+      home: AppShell(),
     );
   }
 }

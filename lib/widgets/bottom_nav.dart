@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
-class SafeBottomNav extends StatefulWidget {
-  const SafeBottomNav({super.key});
+class SafeBottomNav extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
 
-  @override
-  State<SafeBottomNav> createState() => _SafeBottomNavState();
-}
-
-class _SafeBottomNavState extends State<SafeBottomNav> {
-  int index = 0;
+  const SafeBottomNav({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return NavigationBar(
-      selectedIndex: index,
-      onDestinationSelected: (i) => setState(() => index = i),
+      selectedIndex: currentIndex,
+      onDestinationSelected: onTap,
       destinations: const [
         NavigationDestination(
           icon: Icon(Icons.home_outlined),
