@@ -14,6 +14,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool backendConnected = false;
+  int segmentsCount = 0;
+  int safePointsCount = 0;
+  String testStatus = "";
 
   @override
   void initState() {
@@ -28,6 +31,49 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     print('Backend connected: $backendConnected');
   }
+
+
+  Future<void> _runApiTest() async {
+  setState(() {
+    testStatus = "Testing API...";
+  });
+
+  // Same demo coords you use in your map (New Delhi)
+  const double lat = 28.6139;
+  const double lng = 77.2090;
+
+  final segs = await ApiClient.getNearbySegments(
+    lat: lat,
+    lng: lng,
+    radiusKm: 2.0,
+    limit: 50,
+  );
+
+  final points = await ApiClient.getNearbySafePoints(
+    lat: lat,
+    lng: lng,
+    radiusKm: 2.0,
+    limit: 50,
+  );
+
+  setState(() {
+    segmentsCount = segs.length;
+    safePointsCount = points.length;
+    testStatus = "OK ✅ Segments=$segmentsCount | SafePoints=$safePointsCount";
+  });
+
+  if (segs.isNotEmpty) {
+    print("First segment JSON: ${segs.first}");
+  } else {
+    print("No segments returned (seed segments first).");
+  }
+
+  if (points.isNotEmpty) {
+    print("First safe point JSON: ${points.first}");
+  } else {
+    print("No safe points returned (insert/seed safe_points).");
+  }
+}
 
   Widget roundedMap() {
     return Container(
@@ -126,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Icon(
                       backendConnected
                           ? Icons.check_circle
-                          : Icons.error_circle,
+                          : Icons.cancel,
                       color: backendConnected ? Colors.green : Colors.red,
                     ),
                     const SizedBox(width: 8),
@@ -144,6 +190,31 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            const SizedBox(height: 12),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: backendConnected ? _runApiTest : null,
+                  child: const Text("Run API Test"),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                testStatus,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+
+            const SizedBox(height: 12),
             roundedMap(),
             const SizedBox(height: 20),
             Padding(
@@ -153,8 +224,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: infoCard(
                       title: "Safe Areas",
-                      value: "47",
-                      subtitle: "in your vicinity",
+                      value: safePointsCount.toString(),
+                      subtitle: "from backend",
                       icon: Icons.trending_up,
                       iconColor: Colors.green,
                     ),

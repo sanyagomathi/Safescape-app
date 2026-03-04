@@ -1,8 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class ApiClient {
-  static const String baseUrl = "http://127.0.0.1:8000";
+class ApiClient { 
+  static const String baseUrl =
+      String.fromEnvironment('API_BASE_URL', defaultValue: 'http://127.0.0.1:8000');
+
 
   static Future<bool> testConnection() async {
     try {
