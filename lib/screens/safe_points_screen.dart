@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../widgets/gradient_header.dart';
 import '../theme.dart';
+import '../api/api_client.dart';
 
 class SafePointsScreen extends StatefulWidget {
   const SafePointsScreen({super.key});
@@ -13,26 +14,80 @@ class SafePointsScreen extends StatefulWidget {
 }
 
 class _SafePointsScreenState extends State<SafePointsScreen> {
-  int selected = 0;
-  final categories = const ["All (4)", "Police (1)", "Medical (1)", "Transit (1)", "Commercial (1)"];
+  bool loading = false;
+  String error = "";
 
-  Widget _chip(String text, bool active) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 10),
-      child: ChoiceChip(
-        label: Text(text),
-        selected: active,
-        onSelected: (_) {},
-        selectedColor: AppTheme.primaryBlue,
-        labelStyle: TextStyle(
-          color: active ? Colors.white : Colors.black,
-          fontWeight: FontWeight.w600,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
+  List<dynamic> allPoints = [];
+  List<dynamic> visiblePoints = [];
+
+  String? selectedCategory; // null = all
+
+  Future<void> _loadSafePoints() async {
+  setState(() {
+    loading = true;
+    error = "";
+  });
+
+  try {
+    // Using same demo location as your map for now (New Delhi)
+    const lat = 28.6139;
+    const lng = 77.2090;
+
+    final points = await ApiClient.getNearbySafePoints(
+      lat: lat,
+      lng: lng,
+      radiusKm: 3.0,
+      category: selectedCategory, // null => all
+      limit: 200,
     );
-  }
 
+    setState(() {
+      allPoints = points;
+      visiblePoints = points;
+      loading = false;
+    });
+  } catch (e) {
+    setState(() {
+      loading = false;
+      error = "Failed to load safe points";
+    });
+  }
+}
+  int selected = 0;
+final categories = const [
+  "All",
+  "police",
+  "medical",
+  "transit",
+  "commercial",
+];
+@override
+void initState() {
+  super.initState();
+  _loadSafePoints();
+}
+
+ Widget _chip(String text, bool active) {
+  return Padding(
+    padding: const EdgeInsets.only(right: 10),
+    child: ChoiceChip(
+      label: Text(text),
+      selected: active,
+      onSelected: (_) async {
+        setState(() {
+          selectedCategory = (text == "All") ? null : text;
+        });
+        await _loadSafePoints();
+      },
+      selectedColor: AppTheme.primaryBlue,
+      labelStyle: TextStyle(
+        color: active ? Colors.white : Colors.black,
+        fontWeight: FontWeight.w600,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ),
+  );
+}
   Widget _roundedMap() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -59,9 +114,14 @@ class _SafePointsScreenState extends State<SafePointsScreen> {
     );
   }
 
-  Widget _safePointCard() {
+  Widget _safePointCard(dynamic p) {
+    final name = (p["name"] ?? "Unknown").toString();
+    final category = (p["category"] ?? "").toString();
+    final phone = (p["phone"] ?? "").toString();
+    final is24 = (p["is_24x7"] == true);
+
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+      margin: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -86,77 +146,45 @@ class _SafePointsScreenState extends State<SafePointsScreen> {
                 child: const Icon(Icons.shield_outlined, color: Colors.blue),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  "Central Police Station",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  name,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  "24/7",
-                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.w700),
-                ),
-              )
+              if (is24)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    "24/7",
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.w700),
+                  ),
+                )
             ],
           ),
+          const SizedBox(height: 8),
+          Text(category, style: const TextStyle(color: Colors.black54)),
           const SizedBox(height: 10),
-          const Text("Police Station", style: TextStyle(color: Colors.black54)),
-          const SizedBox(height: 14),
-          Row(
-            children: const [
-              Icon(Icons.location_on_outlined, size: 18, color: Colors.black54),
-              SizedBox(width: 6),
-              Text("0.8 km"),
-              SizedBox(width: 18),
-              Icon(Icons.call_outlined, size: 18, color: Colors.black54),
-              SizedBox(width: 6),
-              Text("100"),
-            ],
-          ),
-          const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () {},
-                  icon: const Icon(Icons.send),
-                  label: const Text("Navigate"),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () {},
-                  icon: const Icon(Icons.call),
-                  label: const Text("Call"),
-                ),
-              ),
+              const Icon(Icons.call_outlined, size: 18, color: Colors.black54),
+              const SizedBox(width: 6),
+              Text(phone.isEmpty ? "N/A" : phone),
             ],
-          )
+          ),
         ],
       ),
     );
   }
-
+ 
   @override
   Widget build(BuildContext context) {
+    final countText = loading ? "Loading..." : "${visiblePoints.length} found";
+
     return Scaffold(
       backgroundColor: AppTheme.lightGrey,
       body: Column(
@@ -175,40 +203,49 @@ class _SafePointsScreenState extends State<SafePointsScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              children: List.generate(categories.length, (i) {
-                final active = i == selected;
-                return GestureDetector(
-                  onTap: () => setState(() => selected = i),
-                  child: _chip(categories[i], active),
-                );
-              }),
+              children: categories.map((cat) {
+                final active =
+                    (cat == "All" && selectedCategory == null) ||
+                    (cat == selectedCategory);
+
+                return _chip(cat, active);
+              }).toList(),
             ),
-          ),
+             ),
 
           const SizedBox(height: 14),
 
           // List header
+          // List header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              children: const [
-                Text(
+              children: [
+                const Text(
                   "Nearby Safe Points",
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
-                Spacer(),
-                Text("4 found", style: TextStyle(color: Colors.black54)),
+                const Spacer(),
+                Text(
+                  countText,
+                  style: const TextStyle(color: Colors.black54),
+                ),
               ],
             ),
           ),
 
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _safePointCard(),
-              ],
-            ),
+            child: loading
+                ? const Center(child: CircularProgressIndicator())
+                : error.isNotEmpty
+                    ? Center(child: Text(error))
+                    : visiblePoints.isEmpty
+                        ? const Center(child: Text("No safe points found."))
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            itemCount: visiblePoints.length,
+                            itemBuilder: (context, i) => _safePointCard(visiblePoints[i]),
+                          ),
           ),
         ],
       ),

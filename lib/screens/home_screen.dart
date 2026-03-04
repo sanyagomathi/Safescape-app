@@ -19,18 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String testStatus = "";
 
   @override
-  void initState() {
-    super.initState();
-    _checkBackendConnection();
-  }
-
-  Future<void> _checkBackendConnection() async {
-    final connected = await ApiClient.testConnection();
-    setState(() {
-      backendConnected = connected;
-    });
-    print('Backend connected: $backendConnected');
-  }
 
 
   Future<void> _runApiTest() async {
@@ -155,57 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: "Emotional Safety Intelligence",
             ),
             const SizedBox(height: 10),
-            // Backend status indicator
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: backendConnected ? Colors.green[50] : Colors.red[50],
-                  border: Border.all(
-                    color: backendConnected ? Colors.green : Colors.red,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      backendConnected
-                          ? Icons.check_circle
-                          : Icons.cancel,
-                      color: backendConnected ? Colors.green : Colors.red,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      backendConnected
-                          ? 'Backend Connected'
-                          : 'Backend Disconnected',
-                      style: TextStyle(
-                        color: backendConnected ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const SizedBox(height: 12),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: backendConnected ? _runApiTest : null,
-                  child: const Text("Run API Test"),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
+          
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
