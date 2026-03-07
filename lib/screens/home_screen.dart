@@ -1,17 +1,54 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
+import 'package:url_launcher/url_launcher.dart';
+=======
 import 'package:flutter_application_1/theme.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+>>>>>>> 77950dbc68b5e6df30508993e5765e53217d32f1
 
-import '../widgets/gradient_header.dart';
-import '../widgets/ai_assistant.dart';
-import '../api/api_client.dart';
-
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+<<<<<<< HEAD
+  void callNumber(String number) async {
+    final Uri url = Uri.parse("tel:$number");
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
+  }
+
+  Widget sosButton(String title, IconData icon, Color color, String number) {
+    return Builder(
+      builder: (context) => GestureDetector(
+        onTap: () => callNumber(number),
+        child: Container(
+          width: 110,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade300,
+                blurRadius: 8,
+              )
+            ],
+          ),
+          child: Column(
+            children: [
+              CircleAvatar(
+                backgroundColor: color.withOpacity(0.2),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(height: 10),
+              Text(title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+=======
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -185,203 +222,36 @@ class _HomeScreenState extends State<HomeScreen> {
         debugPrint("Location error: $e");
       }
     }
-    Widget _aiInsightsCard() {
-      return Container(
-        margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: Border.all(
-            color: AppTheme.primaryBlue.withOpacity(0.10),
+
+ Widget roundedMap() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      height: 250,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+          )
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: FlutterMap(
+        options: const MapOptions(
+          initialCenter: LatLng(28.6139, 77.2090), // New Delhi demo
+          initialZoom: 13,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.safescape',
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        AppTheme.primaryBlue,
-                        AppTheme.primaryBlueDark,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Scout AI Insights",
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        "Smart summary of your nearby area",
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: insightsLoading ? null : _loadHomeInsights,
-                  icon: const Icon(Icons.refresh),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            if (insightsLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 18),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else ...[
-              Text(
-                insightsSummary.isEmpty
-                    ? "No AI insights available yet."
-                    : insightsSummary,
-                style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.4,
-                  color: Colors.black87,
-                ),
-              ),
-              if (insightHighlights.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                ...insightHighlights.take(4).map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 4),
-                          child: Icon(
-                            Icons.check_circle,
-                            size: 16,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ],
-        ),
-      );
-    }
-    Widget _locationBanner() {
-      return Container(
-        margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: Border.all(
-            color: AppTheme.primaryBlue.withOpacity(0.12),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    AppTheme.primaryBlue,
-                    AppTheme.primaryBlueDark,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.location_on,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Current Location",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black54,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    currentLocation,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+        ],
+      ),
+    );
+  }
+
   Widget infoCard({
     required String title,
     required String value,
@@ -425,6 +295,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
+      backgroundColor: const Color(0xfff4f6f8),
+
+      appBar: AppBar(
+        title: const Text("SafeEscape"),
+        backgroundColor: Colors.red,
+        centerTitle: true,
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+=======
   floatingActionButton: FloatingActionButton.extended(
   backgroundColor: AppTheme.primaryBlue,
   label: const Text("Chat with Scout"),
@@ -443,8 +325,17 @@ class _HomeScreenState extends State<HomeScreen> {
   },
 ),
   body: SingleChildScrollView(
+>>>>>>> 77950dbc68b5e6df30508993e5765e53217d32f1
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+<<<<<<< HEAD
+
+            /// SAFE AREA STATUS
+            const Text(
+              "Safe Area Status",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+=======
             const GradientHeader(
               title: "SAFESCAPE",
               subtitle: "Emotional Safety Intelligence",
@@ -453,18 +344,26 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                testStatus,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
 
-            const SizedBox(height: 5),
+            const SizedBox(height: 12),
+            roundedMap(),
+            const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
+                  Icon(Icons.shield, color: Colors.white, size: 35),
+                  SizedBox(width: 12),
                   Expanded(
                     child: infoCard(
                       title: "Safe Areas",
                       value: safePointsCount.toString(),
-                      subtitle: "confirmed safe points",
+                      subtitle: "from backend",
                       icon: Icons.trending_up,
                       iconColor: Colors.green,
                     ),
@@ -474,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: infoCard(
                       title: "Alerts",
                       value: "3",
-                      subtitle: "nearby cautions.                  . ",
+                      subtitle: "nearby cautions",
                       icon: Icons.warning,
                       iconColor: Colors.orange,
                     ),
@@ -482,7 +381,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            _aiInsightsCard(),
+            const SizedBox(height: 20),
             const SizedBox(height: 40),
           ],
         ),
