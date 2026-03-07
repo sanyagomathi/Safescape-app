@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/theme.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 import '../widgets/gradient_header.dart';
 import '../widgets/ai_assistant.dart';
@@ -18,9 +21,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int segmentsCount = 0;
   int safePointsCount = 0;
   String testStatus = "";
+  String currentLocation = "Detecting location...";
 
-  @override
-
+ @override
+  void initState() {
+    super.initState();
+    getLocation();
+  }
 
   Future<void> _runApiTest() async {
   setState(() {
@@ -63,8 +70,91 @@ class _HomeScreenState extends State<HomeScreen> {
     print("No safe points returned (insert/seed safe_points).");
   }
 }
+    Future<void> getLocation() async {
+      try {
+        setState(() {
+          currentLocation = "Checking location services...";
+        });
 
-  Widget roundedMap() {
+        final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!serviceEnabled) {
+          setState(() {
+            currentLocation = "Turn on Location Services";
+          });
+          return;
+        }
+
+        setState(() {
+          currentLocation = "Checking permission...";
+        });
+
+        LocationPermission permission = await Geolocator.checkPermission();
+
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            currentLocation = "Location permission denied";
+          });
+          return;
+        }
+
+        if (permission == LocationPermission.deniedForever) {
+          setState(() {
+            currentLocation = "Location permission denied forever";
+          });
+          return;
+        }
+
+        setState(() {
+          currentLocation = "Getting coordinates...";
+        });
+
+        final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 15),
+        );
+
+        setState(() {
+          currentLocation = "Finding place name...";
+        });
+
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+
+        if (placemarks.isEmpty) {
+          setState(() {
+            currentLocation =
+                "${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
+          });
+          return;
+        }
+
+        final place = placemarks.first;
+        final locality = place.locality?.trim();
+        final area = place.subLocality?.trim();
+        final state = place.administrativeArea?.trim();
+
+        setState(() {
+          currentLocation = [
+            if (area != null && area.isNotEmpty) area,
+            if (locality != null && locality.isNotEmpty) locality,
+            if (state != null && state.isNotEmpty) state,
+          ].join(", ");
+        });
+      } catch (e) {
+        setState(() {
+          currentLocation = "Location error: $e";
+        });
+        debugPrint("Location error: $e");
+      }
+    }
+
+ Widget roundedMap() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       height: 250,
@@ -136,28 +226,46 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-  floatingActionButton: FloatingActionButton(
-    backgroundColor: Colors.deepPurple,
-    child: const Icon(Icons.smart_toy),
-    onPressed: () {
-      showDialog(
-        context: context,
-        builder: (context) => const Dialog(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: AIAssistant(),
-          ),
-        ),
-      );
-    },
-  ),
+  floatingActionButton: FloatingActionButton.extended(
+  backgroundColor: AppTheme.primaryBlue,
+  label: const Text("Chat with Scout"),
+  icon: const Icon(Icons.smart_toy),
 
+  onPressed: () {
+    showDialog(
+      context: context,
+      builder: (context) => const Dialog(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: AIAssistant(),
+        ),
+      ),
+    );
+  },
+),
   body: SingleChildScrollView(
         child: Column(
           children: [
             const GradientHeader(
               title: "SAFESCAPE",
               subtitle: "Emotional Safety Intelligence",
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.location_on, size: 18, color: Colors.redAccent),
+                  const SizedBox(width: 6),
+                  Text(
+                    currentLocation,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 10),
           

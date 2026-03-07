@@ -27,12 +27,25 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     _controller.clear();
-
+    final history = messages
+    .map((m) => {
+          'role': m.isUser ? 'user' : 'assistant',
+          'text': m.text,
+        })
+    .toList();
     try {
+      final history = messages
+    .map((m) => {
+          'role': m.isUser ? 'user' : 'assistant',
+          'text': m.text,
+        })
+    .toList();
+    
       final reply = await AIService.askAI(
         message: text,
         lat: demoLat,
         lng: demoLng,
+        history: history,
         hour: DateTime.now().hour,
       );
 
